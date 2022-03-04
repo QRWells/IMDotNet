@@ -11,6 +11,8 @@
 
 #endregion
 
+using System;
+
 namespace IMDotNet.Shared.Data;
 
 [Serializable]
