@@ -32,11 +32,8 @@ public class TcpSession : IDisposable
     private void SendError(SocketError error)
     {
         // Skip disconnect errors
-        if (error == SocketError.ConnectionAborted ||
-            error == SocketError.ConnectionRefused ||
-            error == SocketError.ConnectionReset ||
-            error == SocketError.OperationAborted ||
-            error == SocketError.Shutdown)
+        if (error is SocketError.ConnectionAborted or SocketError.ConnectionRefused
+            or SocketError.ConnectionReset or SocketError.OperationAborted or SocketError.Shutdown)
             return;
 
         OnError(error);
@@ -302,11 +299,9 @@ public class TcpSession : IDisposable
         }
 
         // Check for socket error
-        if (ec != SocketError.Success)
-        {
-            SendError(ec);
-            Disconnect();
-        }
+        if (ec == SocketError.Success) return sent;
+        SendError(ec);
+        Disconnect();
 
         return sent;
     }
@@ -499,30 +494,26 @@ public class TcpSession : IDisposable
 
             lock (_sendLock)
             {
-                // Is previous socket send in progress?
+                // Return if previous socket send is still in progress
+                if (!_sendBufferFlush.IsEmpty)
+                    return;
+
+                // Swap flush and main buffers
+                _sendBufferFlush = Interlocked.Exchange(ref _sendBufferMain, _sendBufferFlush);
+                _sendBufferFlushOffset = 0;
+
+                // Update statistic
+                BytesPending = 0;
+                BytesSending += _sendBufferFlush.Size;
+
+                // Check if the flush buffer is empty
                 if (_sendBufferFlush.IsEmpty)
                 {
-                    // Swap flush and main buffers
-                    _sendBufferFlush = Interlocked.Exchange(ref _sendBufferMain, _sendBufferFlush);
-                    _sendBufferFlushOffset = 0;
+                    // Need to call empty send buffer handler
+                    empty = true;
 
-                    // Update statistic
-                    BytesPending = 0;
-                    BytesSending += _sendBufferFlush.Size;
-
-                    // Check if the flush buffer is empty
-                    if (_sendBufferFlush.IsEmpty)
-                    {
-                        // Need to call empty send buffer handler
-                        empty = true;
-
-                        // End sending process
-                        _sending = false;
-                    }
-                }
-                else
-                {
-                    return;
+                    // End sending process
+                    _sending = false;
                 }
             }
 
@@ -803,19 +794,17 @@ public class TcpSession : IDisposable
         // refer to reference type fields because those objects may
         // have already been finalized."
 
-        if (!IsDisposed)
-        {
-            if (disposingManagedResources)
-                // Dispose managed resources here...
-                Disconnect();
+        if (IsDisposed) return;
+        if (disposingManagedResources)
+            // Dispose managed resources here...
+            Disconnect();
 
-            // Dispose unmanaged resources here...
+        // Dispose unmanaged resources here...
 
-            // Set large fields to null here...
+        // Set large fields to null here...
 
-            // Mark as disposed.
-            IsDisposed = true;
-        }
+        // Mark as disposed.
+        IsDisposed = true;
     }
 
     #endregion
