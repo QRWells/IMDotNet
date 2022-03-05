@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using IMDotNet.Server;
 using IMDotNet.Server.Settings;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 ILogger logger = loggerFactory.CreateLogger<Program>();
-IConfiguration config = new ConfigurationBuilder()
+IConfiguration config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json")
     .Build();
 var settings = config.GetRequiredSection("Settings").Get<Settings>();

@@ -13,4 +13,7 @@
 
 namespace IMDotNet.Server.Settings;
 
-public record Settings(int Port);
+public class Settings
+{
+    public int Port;
+}
