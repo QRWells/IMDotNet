@@ -11,8 +11,6 @@
 
 #endregion
 
-using System;
-
 namespace IMDotNet.Shared.Exceptions;
 
 public abstract class RoomException : Exception

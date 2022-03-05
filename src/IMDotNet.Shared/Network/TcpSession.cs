@@ -1,7 +1,5 @@
-﻿using System;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 
 namespace IMDotNet.Shared.Network;
 
@@ -672,10 +670,7 @@ public class TcpSession : IDisposable
         }
 
         // Try to send again if the session is valid
-        if (e.SocketError == SocketError.Success)
-        {
-            return true;
-        }
+        if (e.SocketError == SocketError.Success) return true;
 
         SendError(e.SocketError);
         Disconnect();

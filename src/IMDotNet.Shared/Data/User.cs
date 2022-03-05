@@ -11,8 +11,6 @@
 
 #endregion
 
-using System;
-
 namespace IMDotNet.Shared.Data;
 
 [Serializable]
@@ -20,9 +18,9 @@ public class User : IComparable<User>
 {
     public User(string login, string password, Room chatroom = null)
     {
-        this.Chatroom = chatroom;
-        this.Login = login;
-        this.Password = password;
+        Chatroom = chatroom;
+        Login = login;
+        Password = password;
     }
 
     public string Login { get; set; }
