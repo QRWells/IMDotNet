@@ -9,24 +9,24 @@ namespace IMDotNet.Shared.Message;
 public enum MessageFlag : ushort
 {
     Text = 1 << 0,
-    File = 1 << 1,
-    Binary = 1 << 2,
-    Single = 1 << 3,
+    Json = 1 << 1,
+    File = 1 << 2,
+    Binary = 1 << 3,
     BroadCast = 1 << 13,
     Group = 1 << 14,
     Request = 1 << 15
 }
 
 [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Ansi, Size = 0x10)]
-public readonly struct MessageHeader
+public struct MessageHeader
 {
     public const int Size = 0x10;
 
-    [FieldOffset(0x0)] public readonly uint SenderId;
-    [FieldOffset(0x4)] public readonly uint ReceiverId;
-    [FieldOffset(0x8)] public readonly MessageFlag Flag;
-    [FieldOffset(0xA)] public readonly ushort SequenceId;
-    [FieldOffset(0xC)] public readonly uint PayloadLength;
+    [FieldOffset(0x0)] internal uint SenderId;
+    [FieldOffset(0x4)] internal uint ReceiverId;
+    [FieldOffset(0x8)] internal MessageFlag Flag;
+    [FieldOffset(0xA)] internal ushort SequenceId;
+    [FieldOffset(0xC)] internal uint PayloadLength;
 
     public MessageHeader(ReadOnlySpan<ushort> buffer)
     {
@@ -39,7 +39,7 @@ public readonly struct MessageHeader
         ReceiverId = buffer[4];
     }
 
-    public byte[] WriteBytes()
+    public IEnumerable<byte> WriteBytes()
     {
         var buf = new byte[Size];
         var span = buf.AsSpan();
@@ -63,8 +63,8 @@ public readonly struct MessageHeader
         return buf;
     }
 
-    public static MessageHeader ReadFromBytes(ReadOnlySpan<byte> bytes)
+    public static bool ReadFromBytes(ReadOnlySpan<byte> bytes, out MessageHeader header)
     {
-        return bytes.ReadHeader();
+        return bytes.TryReadHeader(out header);
     }
 }

@@ -12,15 +12,34 @@
 #endregion
 
 using System;
+using System.Buffers.Binary;
 using IMDotNet.Shared.Message;
 
 namespace IMDotNet.Shared.Extensions;
 
 public static class MessageExtension
 {
-    public static MessageHeader ReadHeader(this ReadOnlySpan<byte> buffer)
+    public static bool TryReadHeader(this ReadOnlySpan<byte> buffer, out MessageHeader header)
     {
-        if (buffer.Length < MessageHeader.Size) throw new ArgumentException();
-        return new MessageHeader();
+        header = new MessageHeader();
+        if (buffer.Length < MessageHeader.Size) return false;
+        if (BitConverter.IsLittleEndian)
+        {
+            header.SenderId = BitConverter.ToUInt32(buffer);
+            header.ReceiverId = BitConverter.ToUInt32(buffer[0x4..]);
+            header.Flag = (MessageFlag)BitConverter.ToUInt16(buffer[0x8..]);
+            header.SequenceId = BitConverter.ToUInt16(buffer[0xA..]);
+            header.PayloadLength = BitConverter.ToUInt32(buffer[0xC..]);
+        }
+        else
+        {
+            header.SenderId = BinaryPrimitives.ReadUInt32LittleEndian(buffer[..]);
+            header.ReceiverId = BinaryPrimitives.ReadUInt32LittleEndian(buffer[0x4..]);
+            header.Flag = (MessageFlag)BinaryPrimitives.ReadUInt16LittleEndian(buffer[0x8..]);
+            header.SequenceId = BinaryPrimitives.ReadUInt16LittleEndian(buffer[0xA..]);
+            header.PayloadLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer[0xC..]);
+        }
+
+        return true;
     }
 }
