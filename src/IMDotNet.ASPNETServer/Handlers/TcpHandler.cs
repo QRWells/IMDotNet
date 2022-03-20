@@ -33,7 +33,7 @@ public class TcpHandler : ConnectionHandler
     }
 
     public override async Task OnConnectedAsync(ConnectionContext connection)
-    {   
+    {
         // TODO: Authentication
         try
         {
@@ -44,16 +44,14 @@ public class TcpHandler : ConnectionHandler
             while (true)
             {
                 var res = await input.ReadAsync(connection.ConnectionClosed);
-                var str = Encoding.UTF8.GetString(res.Buffer);
-                // TODO: Parse
-                _logger.LogInformation("Received: {}", str);
-                
-                if (str.Length == 0 || str == "!")
-                    break;
-                var bytes = Encoding.UTF8.GetBytes(Reverse(str));
-                bytes.CopyTo(mem);
-                
-                await connection.Transport.Output.WriteAsync(mem[..bytes.Length], connection.ConnectionClosed);
+                if (!_parser.TryParseMessage(res.Buffer, out var message))
+                    continue;
+
+                _logger.LogInformation("Received: {}", message.ToString());
+
+                message.WriteBuffer().CopyTo(mem);
+
+                await connection.Transport.Output.WriteAsync(mem[..message.Size], connection.ConnectionClosed);
                 input.AdvanceTo(res.Buffer.End, res.Buffer.End);
             }
         }
@@ -65,18 +63,5 @@ public class TcpHandler : ConnectionHandler
         {
             _logger.LogInformation("{ConnectionId} disconnected", connection.ConnectionId);
         }
-    }
-
-    // Method for test
-    private static string Reverse(string s)
-    {
-        var array = s.ToCharArray();
-        Array.Reverse(array);
-        return new string(array);
-    }
-
-    private Task ProcessMessageAsync(Message message)
-    {
-        throw new NotImplementedException();
     }
 }

@@ -18,5 +18,5 @@ namespace IMDotNet.ASPNETServer.Services;
 
 public interface IMessageParser
 {
-    public bool TryParseMessage(ref ReadOnlySequence<byte> buffer, out Message message);
+    public bool TryParseMessage(in ReadOnlySequence<byte> buffer, out Message message);
 }

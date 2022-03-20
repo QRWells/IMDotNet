@@ -19,6 +19,7 @@ public abstract class Message
     protected byte[] _rawBody;
 
     public MessageHeader Header => _header;
+    public int Size => MessageHeader.Size + _rawBody.Length;
 
     public virtual byte[] WriteBuffer()
     {
