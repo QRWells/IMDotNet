@@ -11,8 +11,8 @@
 
 #endregion
 
-using System;
 using System.Buffers.Binary;
+using System.Text;
 using IMDotNet.Shared.Message;
 
 namespace IMDotNet.Shared.Extensions;
@@ -41,5 +41,22 @@ public static class MessageExtension
         }
 
         return true;
+    }
+
+    public static async Task<FileMessage> GetFileMessageAsync(this ReadOnlyMemory<byte> buffer, string pathToFile)
+    {
+        if (!buffer.Span.TryReadHeader(out var header))
+            throw new ArgumentException("Error!");
+        var file = new FileStream(pathToFile, FileMode.CreateNew);
+        await file.WriteAsync(buffer[20..]);
+        return new FileMessage(header, file);
+    }
+
+    public static TextMessage GetTextMessage(this ReadOnlyMemory<byte> buffer)
+    {
+        if (!buffer.Span.TryReadHeader(out var header))
+            throw new ArgumentException("Error!");
+        var text = Encoding.UTF8.GetString(buffer[MessageHeader.Size..].Span);
+        return new TextMessage(header, text);
     }
 }
